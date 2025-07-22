@@ -158,3 +158,12 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ## Contact
 
 For questions or issues, please open an issue on the repository or contact the project maintainer.
+
+## Acknowledgements
+
+This project includes adapted components from the following open-source projects:
+
+- 📄 **[Docling](https://github.com/docling-project/docling)** – Used for PDF scraping and conversion to structured content.
+- 🌐 **[koop46's web scraping tools](https://github.com/koop46)** – Used as the base for website scraping functionality.
+
+We thank the original authors for making their work publicly available under open-source licenses.

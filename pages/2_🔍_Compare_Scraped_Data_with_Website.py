@@ -122,8 +122,8 @@ def find_matching_databases(url):
 url_input = st.text_input("Enter URL to compare scraped content with live page:", 
                           value=st.session_state.state['url_input'])
 if url_input != st.session_state.state['url_input']:
+    # Reset state when URL changes
     update_state('url_input', url_input)
-    # Reset data when URL changes
     update_state('scraped_text', None)
     update_state('live_text', None)
     update_state('similarity', None)
@@ -135,133 +135,150 @@ if url_input != st.session_state.state['url_input']:
     # Find matching databases
     if url_input:
         with st.spinner("🔍 Searching databases for matching URL..."):
-            update_state('matching_dbs', find_matching_databases(url_input))
+            matching_dbs = find_matching_databases(url_input)
+            update_state('matching_dbs', matching_dbs)
+            # Automatically select the first database if only one is found
+            if len(matching_dbs) == 1:
+                update_state('selected_db', matching_dbs[0])
 
-if url_input:
-    # Show database selector if multiple matches found
+# Database selector function
+if url_input and st.session_state.state['matching_dbs']:
     if len(st.session_state.state['matching_dbs']) > 1:
         st.info(f"Found {len(st.session_state.state['matching_dbs'])} databases with this URL")
         selected_db = st.selectbox(
             "Select database to use for comparison:",
             options=[""] + st.session_state.state['matching_dbs'],
-            format_func=lambda x: x or "All matching databases"
+            format_func=lambda x: x or "Select a database",
+            key="db_selector"
         )
-        update_state('selected_db', selected_db)
-    elif len(st.session_state.state['matching_dbs']) == 1:
-        update_state('selected_db', st.session_state.state['matching_dbs'][0])
-    else:
-        st.warning("No matching databases found for this URL")
-    
-    # Load scraped data based on selection
-    if st.session_state.state['scraped_text'] is None:
-        with st.spinner("📚 Loading scraped content..."):
+        if selected_db != st.session_state.state['selected_db']:
+            # Reset data when database selection changes
+            update_state('selected_db', selected_db)
+            update_state('scraped_text', None)
             update_state('scraped_sections', [])
-            update_state('scraped_text', '')
-            
-            # Determine which databases to use
-            db_to_use = []
-            if st.session_state.state['selected_db']:
-                db_to_use = [st.session_state.state['selected_db']]
-            else:
-                db_to_use = st.session_state.state['matching_dbs']
-            
-            # Load content from selected databases
-            for filename in db_to_use:
-                path = os.path.join("database", filename)
-                try:
-                    with open(path, "r", encoding="utf-8") as f:
-                        for line in f:
-                            try:
-                                obj = json.loads(line)
-                                if obj.get("origin_link") == url_input:
-                                    st.session_state.state['scraped_sections'].append(obj)
-                                    st.session_state.state['scraped_text'] += obj.get("content", "")
-                            except json.JSONDecodeError:
-                                continue
-                except FileNotFoundError:
-                    st.error(f"Could not access database file: {path}")
-                    continue
+    elif len(st.session_state.state['matching_dbs']) == 1:
+        # Ensure single database is consistently selected
+        if st.session_state.state['selected_db'] != st.session_state.state['matching_dbs'][0]:
+            update_state('selected_db', st.session_state.state['matching_dbs'][0])
+            update_state('scraped_text', None)
+            update_state('scraped_sections', [])
+else:
+    st.warning("No matching databases found for this URL")
 
-    # Show compare button if we have scraped content
-    if st.session_state.state['scraped_text']:
-        if st.button("🔍 Fetch and compare live page"):
-            with st.spinner("🌐 Fetching live page content..."):
-                live_html = fetch_rendered_text(url_input, return_html=True)
-                st.session_state.state['live_text'] = fetch_rendered_text(url_input)
-                st.session_state.state['live_sections'] = parse_live_content(live_html, url_input)
-                st.session_state.state['similarity'] = semantic_similarity(
-                    st.session_state.state['scraped_text'],
-                    st.session_state.state['live_text']
-                )
-
-    # Display comparison results if available
-    if st.session_state.state['live_text']:
-        st.success(f"Live content size: {len(st.session_state.state['live_text'])} characters")
-        st.success(f"Scraped content size: {len(st.session_state.state['scraped_text'])} characters")
+# Load scraped data based on selection
+if url_input and st.session_state.state['selected_db'] and st.session_state.state['scraped_text'] is None:
+    with st.spinner("📚 Loading scraped content..."):
+        # Initialize fresh containers
+        scraped_sections = []
+        scraped_text = ""
         
-        if st.session_state.state['similarity']:
-            st.metric(label="Semantic Similarity Score (0 to 1)", 
-                     value=f"{st.session_state.state['similarity']:.3f}")
-
-            # Similarity interpretation
-            sim_score = st.session_state.state['similarity']
-            if sim_score > 0.95:
-                st.success("✅ Excellent match")
-            elif sim_score > 0.85:
-                st.info("🟡 Minor differences")
-            elif sim_score > 0.70:
-                st.warning("🟠 Partial match")
+        # Load content from the selected database
+        path = os.path.join("database", st.session_state.state['selected_db'])
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                for line in f:
+                    try:
+                        obj = json.loads(line)
+                        if obj.get("origin_link") == url_input:
+                            # Skip if section number already exists to avoid duplicates
+                            if not any(s['section'] == obj['section'] for s in scraped_sections):
+                                scraped_sections.append(obj)
+                                scraped_text += obj.get("content", "") + "\n\n"
+                    except json.JSONDecodeError:
+                        continue
+            # Sort sections by section number
+            scraped_sections.sort(key=lambda x: x['section'])
+            if not scraped_sections:
+                st.warning(f"No matching entries found for {url_input} in {st.session_state.state['selected_db']}")
             else:
-                st.error("🔴 Poor match — consider reviewing scraped data")
+                st.success(f"Loaded {len(scraped_sections)} sections from {st.session_state.state['selected_db']}")
+        except FileNotFoundError:
+            st.error(f"Could not access database file: {path}")
+        
+        # Update state with collected data
+        update_state('scraped_sections', scraped_sections)
+        update_state('scraped_text', scraped_text.strip())
 
-            # Generate diff
-            live_lines = textwrap.wrap(st.session_state.state['live_text'], width=120)
-            scraped_lines = textwrap.wrap(st.session_state.state['scraped_text'], width=120)
-            differ = difflib.HtmlDiff()
-            diff_html = differ.make_table(
-                fromlines=live_lines,
-                tolines=scraped_lines,
-                fromdesc='Live Website',
-                todesc='Scraped Data',
-                context=True,
-                numlines=2
-            )
+# Show compare button if we have scraped content
+if st.session_state.state['scraped_text']:
+    if st.button("🔍 Fetch and compare live page"):
+        with st.spinner("🌐 Fetching live page content..."):
+            live_html = fetch_rendered_text(url_input, return_html=True)
+            update_state('live_text', fetch_rendered_text(url_input))
+            update_state('live_sections', parse_live_content(live_html, url_input))
+            update_state('similarity', semantic_similarity(
+                st.session_state.state['scraped_text'],
+                st.session_state.state['live_text']
+            ))
 
-            # Display diff visualization
-            scrollable_container = f"""
-            <div style='
-                overflow: auto;
-                height: 300px;
-                border: 1px solid #ccc;
-                padding: 10px;
-                background-color: #ffffff;
-                color: #000000;
-            '>
-            <style>
-            table.diff {{ font-family: Courier; font-size: 14px; border: medium; color: #000000; }}
-            .diff_header {{ background-color: #e0e0e0; color: #000000; }}
-            .diff_next {{ background-color: #c0c0c0; color: #000000; }}
-            td.diff_added {{ background-color: #aaffaa; color: #000000; }}
-            td.diff_chg {{ background-color: #ffff77; color: #000000; }}
-            td.diff_sub {{ background-color: #ffaaaa; color: #000000; }}
-            </style>
-            {diff_html}
-            </div>
-            """
-            st.markdown(scrollable_container, unsafe_allow_html=True)
+# Display comparison results if available
+if st.session_state.state['live_text']:
+    st.success(f"Live content size: {len(st.session_state.state['live_text'])} characters")
+    st.success(f"Scraped content size: {len(st.session_state.state['scraped_text'])} characters")
+    
+    if st.session_state.state['similarity']:
+        st.metric(label="Semantic Similarity Score (0 to 1)", 
+                 value=f"{st.session_state.state['similarity']:.3f}")
 
-            # Content preview
-            col1, col2 = st.columns(2)
-            with col1:
-                st.subheader("📄 Live Website Text")
-                st.text_area("Live Text Preview", st.session_state.state['live_text'], height=300)
-                if st.button("🖥️ View Live Text Full Screen"):
-                    update_state('show_full_screen_live', True)
-            with col2:
-                st.subheader("📄 Scraped Text")
-                st.text_area("Scraped Text Preview", st.session_state.state['scraped_text'], height=300)
-                if st.button("🖥️ View Scraped Text Full Screen"):
-                    update_state('show_full_screen_scraped', True)
+        # Similarity interpretation
+        sim_score = st.session_state.state['similarity']
+        if sim_score > 0.95:
+            st.success("✅ Excellent match")
+        elif sim_score > 0.85:
+            st.info("🟡 Minor differences")
+        elif sim_score > 0.70:
+            st.warning("🟠 Partial match")
+        else:
+            st.error("🔴 Poor match — consider reviewing scraped data")
+
+        # Generate diff
+        live_lines = textwrap.wrap(st.session_state.state['live_text'], width=120)
+        scraped_lines = textwrap.wrap(st.session_state.state['scraped_text'], width=120)
+        differ = difflib.HtmlDiff()
+        diff_html = differ.make_table(
+            fromlines=live_lines,
+            tolines=scraped_lines,
+            fromdesc='Live Website',
+            todesc='Scraped Data',
+            context=True,
+            numlines=2
+        )
+
+        # Display diff visualization
+        scrollable_container = f"""
+        <div style='
+            overflow: auto;
+            height: 300px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #ffffff;
+            color: #000000;
+        '>
+        <style>
+        table.diff {{ font-family: Courier; font-size: 14px; border: medium; color: #000000; }}
+        .diff_header {{ background-color: #e0e0e0; color: #000000; }}
+        .diff_next {{ background-color: #c0c0c0; color: #000000; }}
+        td.diff_added {{ background-color: #aaffaa; color: #000000; }}
+        td.diff_chg {{ background-color: #ffff77; color: #000000; }}
+        td.diff_sub {{ background-color: #ffaaaa; color: #000000; }}
+        </style>
+        {diff_html}
+        </div>
+        """
+        st.markdown(scrollable_container, unsafe_allow_html=True)
+
+        # Content preview
+        col1, col2 = st.columns(2)
+        with col1:
+            st.subheader("📄 Live Website Text")
+            st.text_area("Live Text Preview", st.session_state.state['live_text'], height=300)
+            if st.button("🖥️ View Live Text Full Screen"):
+                update_state('show_full_screen_live', True)
+        with col2:
+            st.subheader("📄 Scraped Text")
+            st.text_area("Scraped Text Preview", st.session_state.state['scraped_text'], height=300)
+            if st.button("🖥️ View Scraped Text Full Screen"):
+                update_state('show_full_screen_scraped', True)
 
 # Full-screen view for live content
 if st.session_state.state['show_full_screen_live'] and st.session_state.state['live_sections']:

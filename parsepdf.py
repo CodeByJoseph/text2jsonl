@@ -6,7 +6,7 @@ import hashlib
 from contextlib import redirect_stdout
 import io
 from urllib.parse import urlparse, urljoin
-from utils import load_scraped_text, semantic_similarity  # Import required utils
+from utils import load_scraped_text, semantic_similarity, extract_external_links # Import required utils
 
 def parse_pdf_markdown(markdown_text, origin_link):
     """

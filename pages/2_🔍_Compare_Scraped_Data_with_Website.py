@@ -14,7 +14,6 @@ if 'state' in st.session_state:
     st.session_state.state['show_full_screen_scraped'] = False
     st.session_state.state['show_full_screen_live'] = False
     st.session_state.state['show_full_screen_pdf'] = False
-    st.write("Debug: Cleared fullscreen states on script run")
 
 # Initialize session state
 if 'state' not in st.session_state:
@@ -36,9 +35,6 @@ if 'state' not in st.session_state:
         'selected_db': None
     }
 
-# Debug: Log initial session state
-st.write("Debug: Initial session state:", {k: v for k, v in st.session_state.state.items() if 'show_full_screen' in k})
-
 # Input section
 st.subheader("Select Input Type")
 input_type = st.radio("Compare with:", ["Web Page", "PDF"], key="input_type")
@@ -58,7 +54,6 @@ if input_type != st.session_state.state['input_type']:
     update_state('show_full_screen_scraped', False, st.session_state.state)
     update_state('show_full_screen_live', False, st.session_state.state)
     update_state('show_full_screen_pdf', False, st.session_state.state)
-    st.write("Debug: Reset all states due to input type change")
 
 if input_type == "Web Page":
     url_input = st.text_input("Enter URL to compare scraped content with live page:",
@@ -77,7 +72,6 @@ if input_type == "Web Page":
         update_state('show_full_screen_scraped', False, st.session_state.state)
         update_state('show_full_screen_live', False, st.session_state.state)
         update_state('show_full_screen_pdf', False, st.session_state.state)
-        st.write("Debug: Reset states due to URL input change")
 
         if url_input:
             if not validate_url(url_input):
@@ -87,7 +81,6 @@ if input_type == "Web Page":
             else:
                 with st.spinner("🔍 Searching databases for matching URL..."):
                     matching_dbs = find_matching_databases(url_input)
-                    st.write(f"Debug: Found {len(matching_dbs)} matching databases: {matching_dbs}")
                     update_state('matching_dbs', matching_dbs, st.session_state.state)
                     if len(matching_dbs) == 1:
                         update_state('selected_db', matching_dbs[0], st.session_state.state)
@@ -108,7 +101,6 @@ else:
         update_state('show_full_screen_scraped', False, st.session_state.state)
         update_state('show_full_screen_live', False, st.session_state.state)
         update_state('show_full_screen_pdf', False, st.session_state.state)
-        st.write("Debug: Reset states due to PDF input change")
 
         is_url = pdf_input.startswith(('http://', 'https://'))
         if is_url:
@@ -119,7 +111,6 @@ else:
             else:
                 with st.spinner("🔍 Searching databases for matching URL..."):
                     matching_dbs = find_matching_databases(pdf_input)
-                    st.write(f"Debug: Found {len(matching_dbs)} matching databases: {matching_dbs}")
                     update_state('matching_dbs', matching_dbs, st.session_state.state)
                     if len(matching_dbs) == 1:
                         update_state('selected_db', matching_dbs[0], st.session_state.state)
@@ -148,7 +139,6 @@ if (input_type == "Web Page" and st.session_state.state['url_input'] and st.sess
             update_state('show_full_screen_scraped', False, st.session_state.state)
             update_state('show_full_screen_live', False, st.session_state.state)
             update_state('show_full_screen_pdf', False, st.session_state.state)
-            st.write("Debug: Reset scraped and fullscreen states due to database change")
     elif len(st.session_state.state['matching_dbs']) == 1:
         if st.session_state.state['selected_db'] != st.session_state.state['matching_dbs'][0]:
             update_state('selected_db', st.session_state.state['matching_dbs'][0], st.session_state.state)
@@ -157,7 +147,7 @@ if (input_type == "Web Page" and st.session_state.state['url_input'] and st.sess
             update_state('show_full_screen_scraped', False, st.session_state.state)
             update_state('show_full_screen_live', False, st.session_state.state)
             update_state('show_full_screen_pdf', False, st.session_state.state)
-            st.write("Debug: Set selected_db to single matching database, reset fullscreen states")
+
 else:
     if input_type == "Web Page" and st.session_state.state['url_input'] and validate_url(st.session_state.state['url_input']):
         st.warning("No matching databases found for this URL")
@@ -177,19 +167,16 @@ if (input_type == "Web Page" and st.session_state.state['url_input'] and st.sess
                 )
                 if not scraped_sections:
                     st.warning(f"No matching entries found in {st.session_state.state['selected_db']}")
-                    st.write(f"Debug: No sections found for {st.session_state.state['pdf_input' if input_type == 'PDF' else 'url_input']} in {db_path}")
                 else:
                     st.success(f"Loaded {len(scraped_sections)} sections from {st.session_state.state['selected_db']}")
-                    st.write(f"Debug: Loaded sections: {[s['origin_link'] for s in scraped_sections]}")
                 update_state('scraped_sections', scraped_sections, st.session_state.state)
                 update_state('scraped_text', scraped_text, st.session_state.state)
                 update_state('show_full_screen_scraped', False, st.session_state.state)
                 update_state('show_full_screen_live', False, st.session_state.state)
                 update_state('show_full_screen_pdf', False, st.session_state.state)
-                st.write("Debug: Loaded scraped data, ensured all fullscreen states are False")
             except Exception as e:
                 st.error(f"Failed to load scraped data: {str(e)}")
-                st.write(f"Debug: Error loading {db_path}: {str(e)}")
+
 
 # Compare button
 if st.session_state.state['scraped_text'] or (input_type == "PDF" and st.session_state.state['pdf_input']):
@@ -198,7 +185,6 @@ if st.session_state.state['scraped_text'] or (input_type == "PDF" and st.session
             update_state('show_full_screen_scraped', False, st.session_state.state)
             update_state('show_full_screen_live', False, st.session_state.state)
             update_state('show_full_screen_pdf', False, st.session_state.state)
-            st.write("Debug: Compare button clicked, reset all fullscreen states")
             if input_type == "Web Page":
                 live_html = fetch_rendered_text(st.session_state.state['url_input'], return_html=True)
                 if not live_html:
@@ -239,11 +225,6 @@ if st.session_state.state['scraped_text'] or (input_type == "PDF" and st.session
                     else:
                         st.warning("No scraped data available for comparison, displaying PDF text only")
                         update_state('similarity', None, st.session_state.state)
-            st.write("Debug: Fetched content, fullscreen states:", {
-                'show_full_screen_scraped': st.session_state.state['show_full_screen_scraped'],
-                'show_full_screen_live': st.session_state.state['show_full_screen_live'],
-                'show_full_screen_pdf': st.session_state.state['show_full_screen_pdf']
-            })
 
 # Display comparison results only if not in fullscreen mode
 if not any([st.session_state.state['show_full_screen_scraped'], 
@@ -282,33 +263,20 @@ if not any([st.session_state.state['show_full_screen_scraped'],
             st.subheader(f"📄 {'Live Website' if input_type == 'Web Page' else 'PDF'} Text")
             st.text_area(f"{'Live' if input_type == 'Web Page' else 'PDF'} Text Preview",
                          comparison_text, height=300, key="preview_text_comparison")
-            if comparison_sections:
-                st.subheader(f"📄 {'Live Website' if input_type == 'Web Page' else 'PDF'} Sections")
-                display_sections(comparison_sections,
-                                f"{'Live Website' if input_type == 'Web Page' else 'PDF'} Content Details",
-                                comparison_sections[0]['origin_link'])
             if st.button(f"🖥️ {'View Full Screen' if not st.session_state.state['show_full_screen_' + ('live' if input_type == 'Web Page' else 'pdf')] else 'Close Full Screen'} ({'Live' if input_type == 'Web Page' else 'PDF'})", key="fullscreen_button_comparison"):
                 update_state('show_full_screen_' + ('live' if input_type == 'Web Page' else 'pdf'), not st.session_state.state['show_full_screen_' + ('live' if input_type == 'Web Page' else 'pdf')], st.session_state.state)
                 update_state('show_full_screen_scraped', False, st.session_state.state)
                 update_state('show_full_screen_' + ('pdf' if input_type == 'Web Page' else 'live'), False, st.session_state.state)
-                st.write(f"Debug: Toggled show_full_screen_{'live' if input_type == 'Web Page' else 'pdf'} to {st.session_state.state['show_full_screen_' + ('live' if input_type == 'Web Page' else 'pdf')]}, others to False")
         with col2:
             st.subheader("📄 Scraped Text")
             st.text_area("Scraped Text Preview",
                          st.session_state.state['scraped_text'] or "No scraped text available",
                          height=300, key="preview_text_scraped")
-            if st.session_state.state['scraped_sections']:
-                st.subheader("📄 Scraped Sections")
-                display_sections(st.session_state.state['scraped_sections'],
-                                "Scraped Content Details",
-                                st.session_state.state['scraped_sections'][0]['origin_link'])
             if st.button(f"🖥️ {'View Full Screen' if not st.session_state.state['show_full_screen_scraped'] else 'Close Full Screen'} (Scraped)", key="fullscreen_button_scraped"):
                 update_state('show_full_screen_scraped', not st.session_state.state['show_full_screen_scraped'], st.session_state.state)
                 update_state('show_full_screen_live', False, st.session_state.state)
                 update_state('show_full_screen_pdf', False, st.session_state.state)
-                st.write(f"Debug: Toggled show_full_screen_scraped to {st.session_state.state['show_full_screen_scraped']}, others to False")
 
-# Fullscreen view (exclusive)
 # Fullscreen view (exclusive)
 if any([st.session_state.state['show_full_screen_scraped'], 
         st.session_state.state['show_full_screen_live'], 
@@ -324,14 +292,12 @@ if any([st.session_state.state['show_full_screen_scraped'],
                                 st.session_state.state['scraped_sections'][0]['origin_link'])
                 if st.button("Close Full Screen (Scraped)", key="close_fullscreen_scraped"):
                     update_state('show_full_screen_scraped', False, st.session_state.state)
-                    st.write("Debug: Closed fullscreen for scraped content")
             elif st.session_state.state['show_full_screen_live'] and st.session_state.state['live_sections'] and input_type == "Web Page":
                 display_sections(st.session_state.state['live_sections'],
                                 "Live Website Content Details",
                                 st.session_state.state['live_sections'][0]['origin_link'])
                 if st.button("Close Full Screen (Live)", key="close_fullscreen_live"):
                     update_state('show_full_screen_live', False, st.session_state.state)
-                    st.write("Debug: Closed fullscreen for live content")
             elif st.session_state.state['show_full_screen_pdf'] and (st.session_state.state['pdf_text'] or st.session_state.state['pdf_sections']) and input_type == "PDF":
                 if st.session_state.state['pdf_sections']:
                     display_sections(st.session_state.state['pdf_sections'],
@@ -343,7 +309,6 @@ if any([st.session_state.state['show_full_screen_scraped'],
                 st.write(f"**Source**: {st.session_state.state['pdf_input']}")
                 if st.button("Close Full Screen (PDF)", key="close_fullscreen_pdf"):
                     update_state('show_full_screen_pdf', False, st.session_state.state)
-                    st.write("Debug: Closed fullscreen for PDF content")
             st.session_state.fullscreen_rendered = True
 else:
     if 'fullscreen_rendered' in st.session_state:

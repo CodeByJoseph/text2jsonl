@@ -66,24 +66,6 @@ def parse_pdf_markdown(markdown_text, origin_link):
     
     return sections
 
-def extract_external_links(text_lines, base_url):
-    """Extract external links from text content (supports both Markdown and plain text)"""
-    text = " ".join(text_lines)
-    
-    # First extract Markdown-style links [text](url)
-    markdown_links = re.findall(r"\[(.*?)\]\((https?://.*?)\)", text)
-    result = set(url[1] for url in markdown_links if url[1].startswith("http"))
-    
-    # Then extract plain text URLs
-    plain_urls = re.findall(r'https?://[^\s>]+', text)
-    result.update(plain_urls)
-    
-    # Filter out URLs from base domain
-    domain = urlparse(base_url).netloc
-    filtered = [url for url in result if not url.startswith(f"https://{domain}") and not url.startswith(f"http://{domain}")]
-    
-    return filtered
-
 def process_all_pdfs(pdf_paths, output_jsonl, log_area, log_buffer):
     """Process all PDFs with enhanced logging, original URL tracking, and semantic analysis"""
     similarity_results = []  # Store similarity results for PDFs

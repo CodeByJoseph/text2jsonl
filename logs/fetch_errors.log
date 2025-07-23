@@ -1,0 +1,25 @@
+2025-07-23 11:07:13.935820 - URL https://studentportal.gu.se/program/datavetenskapligt-program is not a PDF (Content-Type: text/html; charset=utf-8)
+2025-07-23 11:07:18.176290 - URL https://studentportal.gu.se/program/datavetenskapligt-program is not a PDF (Content-Type: text/html; charset=utf-8)
+2025-07-23 11:07:24.606141 - URL https://studentportal.gu.se/program/datavetenskapligt-program is not a PDF (Content-Type: text/html; charset=utf-8)
+2025-07-23 11:07:53.583246 - URL https://studentportal.gu.se/program/datavetenskapligt-program is not a PDF (Content-Type: text/html; charset=utf-8)
+2025-07-23 11:08:19.790186 - Failed to extract text from PDF https://kursplaner.gu.se/pdf/kurs/sv/MMGD00.pdf: DocumentConverter.__init__() got an unexpected keyword argument 'ocr'
+2025-07-23 11:29:50.891497 - Docling failed for https://kursplaner.gu.se/pdf/kurs/sv/MMGD00.pdf: DocumentConverter.__init__() got an unexpected keyword argument 'ocr'
+Traceback (most recent call last):
+  File "C:\Users\power\OneDrive\Skrivbord\text2jsonl\utils.py", line 224, in fetch_pdf_text
+    converter = DocumentConverter(ocr=True)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: DocumentConverter.__init__() got an unexpected keyword argument 'ocr'
+
+2025-07-23 11:30:22.277075 - URL https://studentportal.gu.se/program/datavetenskapligt-program is not a PDF (Content-Type: text/html; charset=utf-8)
+2025-07-23 11:30:31.894015 - URL https://studentportal.gu.se/program/datavetenskapligt-program is not a PDF (Content-Type: text/html; charset=utf-8)
+2025-07-23 11:30:38.389574 - URL https://studentportal.gu.se/program/datavetenskapligt-program is not a PDF (Content-Type: text/html; charset=utf-8)
+2025-07-23 11:32:53.992804 - URL https://studentportal.gu.se/program/datavetenskapligt-program is not a PDF (Content-Type: text/html; charset=utf-8)
+2025-07-23 11:33:00.493761 - URL https://studentportal.gu.se/program/datavetenskapligt-program is not a PDF (Content-Type: text/html; charset=utf-8)
+2025-07-23 11:33:07.045775 - URL https://studentportal.gu.se/program/datavetenskapligt-program is not a PDF (Content-Type: text/html; charset=utf-8)
+2025-07-23 11:37:08.250079 - URL https://studentportal.gu.se/program/datavetenskapligt-program is not a PDF (Content-Type: text/html; charset=utf-8)
+2025-07-23 11:37:15.929964 - URL https://studentportal.gu.se/program/datavetenskapligt-program is not a PDF (Content-Type: text/html; charset=utf-8)
+2025-07-23 11:37:22.267009 - URL https://studentportal.gu.se/program/datavetenskapligt-program is not a PDF (Content-Type: text/html; charset=utf-8)
+2025-07-23 11:42:53.721631 - URL https://kursplaner.gu.se/pdf/kurs/sv/MMGD00.pdf¨ is not a PDF (Content-Type: text/html)
+2025-07-23 11:51:59.365498 - URL https://studentportal.gu.se/program/datavetenskapligt-program is not a PDF (Content-Type: text/html; charset=utf-8)
+2025-07-23 11:52:05.709372 - URL https://studentportal.gu.se/program/datavetenskapligt-program is not a PDF (Content-Type: text/html; charset=utf-8)
+2025-07-23 11:52:12.134482 - URL https://studentportal.gu.se/program/datavetenskapligt-program is not a PDF (Content-Type: text/html; charset=utf-8)

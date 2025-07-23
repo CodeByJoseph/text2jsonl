@@ -29,17 +29,17 @@ pip install -r requirements.txt
 
 **requirements.txt**:
 ```
-streamlit==1.38.0
-pandas==2.2.2
-requests==2.32.3
-validators==0.33.0
-beautifulsoup4==4.12.3
-selenium==4.23.1
-webdriver-manager==4.0.2
-sentence-transformers==3.0.1
-docling==1.1.0
-torch==2.4.0
-lxml==5.3.0
+streamlit>=1.47.0,<2.0.0
+pandas>=2.2.3,<3.0.0
+requests>=2.32.3,<3.0.0
+validators>=0.35.0,<1.0.0
+beautifulsoup4>=4.13.4,<5.0.0
+selenium>=4.34.2,<5.0.0
+webdriver-manager>=4.0.2,<5.0.0
+sentence-transformers>=5.0.0,<6.0.0
+docling>=2.41.0,<3.0.0
+torch>=2.7.1,<3.0.0
+lxml>=5.4.0,<6.0.0
 ```
 
 **Optional**: For GPU acceleration with `sentence-transformers`, install a CUDA-compatible version of PyTorch from [pytorch.org](https://pytorch.org/get-started/locally/).

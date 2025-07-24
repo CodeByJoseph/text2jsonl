@@ -537,6 +537,7 @@ def display_sections(sections: list, title: str, origin_link: str) -> None:
         for section in sections:
             st.markdown(f"### Section {section['section']}: {section['heading']}")
             st.write(section['content'])
+            st.write(section['external_links'])
             st.markdown("---")
         
         if sections:

@@ -462,15 +462,7 @@ def parse_live_content(html: str, url: str) -> List[Dict]:
 
 # Database selector function
 def find_matching_databases(url: str, data_dir: str = "database") -> List[str]:
-    """Find .jsonl databases containing the given URL.
-
-    Args:
-        url (str): The URL to search for.
-        data_dir (str): Directory containing .jsonl files.
-
-    Returns:
-        List[str]: List of database filenames containing the URL.
-    """
+    """Find .jsonl databases containing the given URL with better error handling."""
     matching_dbs = []
     normalized_url = normalize_url(url)
     if not os.path.exists(data_dir):
@@ -483,14 +475,31 @@ def find_matching_databases(url: str, data_dir: str = "database") -> List[str]:
             with open(file_path, 'r', encoding='utf-8') as f:
                 for line in f:
                     try:
+                        # Try to parse the line as JSON
                         entry = json.loads(line.strip())
-                        entry_url = entry.get('origin_link', '')
+                        
+                        # Handle both dictionary entries and string entries
+                        if isinstance(entry, dict):
+                            entry_url = entry.get('origin_link', '')
+                        elif isinstance(entry, str):
+                            # If the entry is a string, treat it as the URL
+                            entry_url = entry
+                        else:
+                            continue
+                            
                         if normalize_url(entry_url) == normalized_url:
                             matching_dbs.append(filename)
                             logging.info(f"Found {url} in {filename}")
                             break
+                            
                     except json.JSONDecodeError:
-                        log_error(f"Invalid JSON in {file_path}: {line}")
+                        # If it's not JSON, check if it's a raw URL string
+                        if normalize_url(line.strip()) == normalized_url:
+                            matching_dbs.append(filename)
+                            logging.info(f"Found raw URL match in {filename}")
+                            break
+                        else:
+                            log_error(f"Invalid JSON in {file_path}: {line}")
     logging.info(f"Found {len(matching_dbs)} databases for {url}: {matching_dbs}")
     return matching_dbs
 
@@ -536,8 +545,10 @@ def display_sections(sections: list, title: str, origin_link: str) -> None:
         st.markdown(f"<h2 style='text-align: center;'>{title}</h2>", unsafe_allow_html=True)
         for section in sections:
             st.markdown(f"### Section {section['section']}: {section['heading']}")
-            st.write(section['content'])
+            st.text(section['content'])
             st.write(section['external_links'])
+            st.write(section['last_updated'])
+            st.write(section['tags'])
             st.markdown("---")
         
         if sections:

@@ -3,10 +3,8 @@ import time
 import os
 from googletrans import Translator
 
-# Removed duplicate imports
-
 def translate_section(section, translator):
-    """Translate Swedish content and headings to English"""
+    """Translate Swedish content, headings, and tags to English"""
     try:
         # Translate heading if present
         heading_trans = translator.translate(
@@ -18,14 +16,21 @@ def translate_section(section, translator):
             section['content'], src='sv', dest='en'
         ).text if section.get('content') else ''
         
+        # Translate tags if present
+        tags_trans = [
+            translator.translate(tag, src='sv', dest='en').text
+            for tag in section.get('tags', [])
+        ]
+        
         return {
             "section": section["section"],
             "heading": heading_trans,
             "content": content_trans,
             # Keep all other fields unchanged
-            "origin_link": section.get("origin_link", ""),  # No longer modified
+            "origin_link": section.get("origin_link", ""),
             "external_links": section.get("external_links", []),
-            "last_updated": section.get("last_updated", "Date not found")
+            "last_updated": section.get("last_updated", "Date not found"),
+            "tags": tags_trans
         }
     except Exception as e:
         print(f"Translation error in section {section.get('section', 'unknown')}: {str(e)}")
@@ -48,6 +53,7 @@ def process_jsonl(input_path, output_path):
                     translated = translate_section(section_data, translator)
                     print(f"  - heading: '{translated['heading']}'")
                     print(f"  - origin_link: '{translated['origin_link']}'")
+                    print(f"  - tags: {translated['tags']}")
                     
                     outfile.write(json.dumps(translated, ensure_ascii=False) + '\n')
                     time.sleep(0.5)  # Rate limiting
@@ -60,8 +66,8 @@ def process_jsonl(input_path, output_path):
         print(f"🚨 File processing error: {str(e)}")
 
 if __name__ == "__main__":
-    input_path = 'database/gu_dv_sv.jsonl'
-    output_path = 'database/gu_dv_en.jsonl'
+    input_path = 'database/gu_dv_v2.jsonl'
+    output_path = 'database/gu_dv_v2(en).jsonl'
 
     if not os.path.exists(input_path):
         print(f"❌ Input file not found: {input_path}")
